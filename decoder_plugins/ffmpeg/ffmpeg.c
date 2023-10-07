@@ -79,7 +79,7 @@ struct ffmpeg_data
 	AVIOContext *pb;
 	AVStream *stream;
 	AVCodecContext *enc;
-	AVCodec *codec;
+	const AVCodec *codec;
 	AVDictionary *opts;
 
 	char *remain_buf;
@@ -863,7 +863,7 @@ static int ffmpeg_can_decode (struct io_stream *stream)
 {
 	int res;
 	AVProbeData probe_data;
-	AVInputFormat *fmt;
+	const AVInputFormat *fmt;
 	char buf[8096 + AVPROBE_PADDING_SIZE] = {0};
 
 	res = io_peek (stream, buf, sizeof (buf));
@@ -1433,7 +1433,7 @@ static int ffmpeg_our_format_ext (const char *ext)
 
 static int ffmpeg_our_format_mime (const char *mime_type)
 {
-	AVOutputFormat *fmt;
+	const AVOutputFormat *fmt;
 
 	fmt = av_guess_format (NULL, NULL, mime_type);
 	return fmt ? 1 : 0;
