@@ -1,14 +1,13 @@
-AC_INIT([Music On Console],[2.6-alpha3],[mocmaint@daper.net],[moc],
-                           [http://moc.daper.net/])
+AC_INIT([Music On Console],[2.6-alpha3],[mocmaint@daper.net],[moc],[http://moc.daper.net/])
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([dist-xz no-dist-gzip])
 
-AC_PREREQ([2.64])
+AC_PREREQ([2.71])
 
 AC_CANONICAL_HOST
-AC_PROG_CC_C99
+AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 
@@ -31,11 +30,10 @@ AC_EGREP_CPP(posix_2001_compatible,
              [AC_MSG_ERROR([A POSIX.1-2001 compatible system is required.])])
 
 AC_PROG_AWK
-AC_LIBTOOL_DLOPEN
 AC_DISABLE_STATIC
 AC_ENABLE_SHARED
-AC_PROG_LIBTOOL
-AC_LIB_LTDL
+LT_INIT([dlopen])
+LTDL_INIT([])
 
 AC_SUBST([EXTRA_OBJS])
 
@@ -88,15 +86,13 @@ AC_CHECK_FUNCS([nl_langinfo])
 
 dnl CODESET (taken from vim)
 AC_MSG_CHECKING(for nl_langinfo(CODESET))
-AC_TRY_LINK([
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	     #ifdef HAVE_LANGINFO_H
 	     # include <langinfo.h>
 	     #endif
-	     ], [char *cs = nl_langinfo(CODESET);],
-	     AC_MSG_RESULT(yes)
-	     AC_DEFINE([HAVE_NL_LANGINFO_CODESET], 1,
-		       [Define if you have CODESET constant]),
-	     AC_MSG_RESULT(no))
+	     ]], [[char *cs = nl_langinfo(CODESET);]])],[AC_MSG_RESULT(yes)
+	     AC_DEFINE(HAVE_NL_LANGINFO_CODESET, 1,
+		       Define if you have CODESET constant)],[AC_MSG_RESULT(no)])
 
 AC_C_BIGENDIAN
 
@@ -458,10 +454,11 @@ AC_SUBST(EXTRA_LIBS)
 AC_SUBST(EXTRA_DISTS)
 AH_BOTTOM([#include "compiler.h"])
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
 	  themes/Makefile
 	  config.example
 	  ])
+AC_OUTPUT
 
 echo
 echo "-----------------------------------------------------------------------"
