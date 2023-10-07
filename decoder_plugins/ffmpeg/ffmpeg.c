@@ -80,6 +80,7 @@ struct ffmpeg_data
 	AVStream *stream;
 	AVCodecContext *enc;
 	AVCodec *codec;
+	AVDictionary *opts;
 
 	char *remain_buf;
 	int remain_buf_len;
@@ -562,10 +563,20 @@ static bool is_seek_broken (struct ffmpeg_data *data)
 /* Downmix multi-channel audios to stereo. */
 static void set_downmixing (struct ffmpeg_data *data)
 {
+#if LIBAVUTIL_VERSION_MAJOR < 58
 	if (av_get_channel_layout_nb_channels (data->enc->channel_layout) <= 2)
-		return;
 
+		return;
 	data->enc->request_channel_layout = AV_CH_LAYOUT_STEREO;
+#else
+	// option types is a string - see AV_OPT_TYPE_CHLAYOUT handling in ffmpeg:libavutil/opt.c
+	char downmix_layout[64];
+
+	if (data->enc->ch_layout.nb_channels <= 2)
+		return;
+	av_channel_layout_describe(&data->enc->ch_layout, downmix_layout, sizeof(downmix_layout));
+	av_dict_set(&data->opts, "downmix", downmix_layout, 0);
+#endif
 }
 
 static int ffmpeg_io_read_cb (void *s, uint8_t *buf, int count)
@@ -620,6 +631,7 @@ static struct ffmpeg_data *ffmpeg_make_data (void)
 	data->stream = NULL;
 	data->enc = NULL;
 	data->codec = NULL;
+	data->opts = NULL;
 	data->remain_buf = NULL;
 	data->remain_buf_len = 0;
 	data->delay = false;
@@ -767,7 +779,7 @@ static void *ffmpeg_open_internal (struct ffmpeg_data *data)
 		data->enc->flags |= AV_CODEC_FLAG_TRUNCATED;
 #endif
 
-	if (avcodec_open2 (data->enc, data->codec, NULL) < 0)
+	if (avcodec_open2 (data->enc, data->codec, &data->opts) < 0)
 	{
 		decoder_error (&data->error, ERROR_FATAL, 0, "No codec for this audio");
 		goto end;
@@ -813,6 +825,7 @@ end:
 	avcodec_close (data->enc);
 	av_freep (&data->enc);
 #endif
+	av_dict_free(&data->opts);
 	avformat_close_input (&data->ic);
 	ffmpeg_log_repeats (NULL);
 	return data;
@@ -1131,17 +1144,22 @@ static int decode_packet (struct ffmpeg_data *data, AVPacket *pkt,
 
 		is_planar = av_sample_fmt_is_planar (data->enc->sample_fmt);
 		packed = (char *)frame->extended_data[0];
-		packed_size = frame->nb_samples * data->sample_width
-		                                * data->enc->channels;
+#if LIBAVUTIL_VERSION_MAJOR < 58
+		int nb_channels = data->enc->channels;
+#else
+		int nb_channels = data->enc->ch_layout.nb_channels;
+#endif
 
-		if (is_planar && data->enc->channels > 1) {
+		packed_size = frame->nb_samples * data->sample_width * nb_channels;
+
+		if (is_planar && nb_channels > 1) {
 			int sample, ch;
 
 			packed = xmalloc (packed_size);
 
 			for (sample = 0; sample < frame->nb_samples; sample += 1) {
-				for (ch = 0; ch < data->enc->channels; ch += 1)
-					memcpy (packed + (sample * data->enc->channels + ch)
+				for (ch = 0; ch < nb_channels; ch += 1)
+					memcpy (packed + (sample * nb_channels + ch)
 					                         * data->sample_width,
 					        (char *)frame->extended_data[ch] + sample * data->sample_width,
 					        data->sample_width);
@@ -1238,7 +1256,12 @@ static int ffmpeg_decode (void *prv_data, char *buf, int buf_len,
 		return 0;
 
 	/* FFmpeg claims to always return native endian. */
-	sound_params->channels = data->enc->channels;
+#if LIBAVUTIL_VERSION_MAJOR < 58
+	int nb_channels = data->enc->channels;
+#else
+	int nb_channels = data->enc->ch_layout.nb_channels;
+#endif
+	sound_params->channels = nb_channels;
 	sound_params->rate = data->enc->sample_rate;
 	sound_params->fmt = data->fmt | SFMT_NE;
 
