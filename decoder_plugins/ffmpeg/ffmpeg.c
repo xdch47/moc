@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <errno.h>
 
+#include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/mathematics.h>
 #if HAVE_LIBAVUTIL_CHANNEL_LAYOUT_H
@@ -761,8 +762,10 @@ static void *ffmpeg_open_internal (struct ffmpeg_data *data)
 	}
 
 	set_downmixing (data);
+#if LIBAVCODEC_VERSION_MAJOR < 60
 	if (data->codec->capabilities & AV_CODEC_CAP_TRUNCATED)
 		data->enc->flags |= AV_CODEC_FLAG_TRUNCATED;
+#endif
 
 	if (avcodec_open2 (data->enc, data->codec, NULL) < 0)
 	{
@@ -1171,7 +1174,7 @@ static bool seek_in_stream (struct ffmpeg_data *data)
 static bool seek_in_stream (struct ffmpeg_data *data, int sec)
 #endif
 {
-	int rc, flags = AVSEEK_FLAG_ANY;
+	int rc;
 	int64_t seek_ts;
 
 #if SEEK_IN_DECODER
@@ -1197,10 +1200,7 @@ static bool seek_in_stream (struct ffmpeg_data *data, int sec)
 		seek_ts += data->stream->start_time;
 	}
 
-	if (data->stream->cur_dts > seek_ts)
-		flags |= AVSEEK_FLAG_BACKWARD;
-
-	rc = av_seek_frame (data->ic, data->stream->index, seek_ts, flags);
+	rc = av_seek_frame (data->ic, data->stream->index, seek_ts, AVSEEK_FLAG_ANY);
 	if (rc < 0) {
 		log_errno ("Seek error", rc);
 		return false;
