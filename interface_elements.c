@@ -367,7 +367,7 @@ static void entry_draw (const struct entry *e, WINDOW *w, const int posx,
 			sizeof(wchar_t) * (len + 1));
 	if (len > e->width)
 		text_ucs[e->width] = L'\0';
-	len = wcstombs (NULL, text_ucs, -1) + 1;
+	len = wcstombs (NULL, text_ucs, 0) + 1;
 	assert (len >= 1);
 
 	text = (char *)xmalloc (len);
@@ -642,7 +642,7 @@ static char *entry_get_text (const struct entry *e)
 
 	assert (e != NULL);
 
-	len = wcstombs (NULL, e->text_ucs, -1) + 1;
+	len = wcstombs (NULL, e->text_ucs, 0) + 1;
 	assert (len >= 1);
 	text = (char *) xmalloc (sizeof (char) * len);
 	wcstombs (text, e->text_ucs, len);
