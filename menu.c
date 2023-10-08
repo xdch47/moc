@@ -19,9 +19,7 @@
 #include <assert.h>
 
 #include "common.h"
-#include "options.h"
 #include "menu.h"
-#include "files.h"
 #include "rbtree.h"
 #include "utf8.h"
 
@@ -597,9 +595,9 @@ void menu_item_set_time (struct menu_item *mi, const char *time)
 {
 	assert (mi != NULL);
 
-	mi->time[sizeof(mi->time)-1] = 0;
-	strncpy (mi->time, time, sizeof(mi->time));
-	assert (mi->time[sizeof(mi->time)-1] == 0);
+	size_t len = strnlen(time, sizeof(time));
+	assert (len < sizeof(mi->time));
+	memcpy (mi->time, time, len + 1);
 }
 
 void menu_item_set_format (struct menu_item *mi, const char *format)
@@ -607,13 +605,10 @@ void menu_item_set_format (struct menu_item *mi, const char *format)
 	assert (mi != NULL);
 	assert (format != NULL);
 
-	mi->format[sizeof(mi->format)-1] = 0;
-	strncpy (mi->format, format,
-			sizeof(mi->format));
-	assert (mi->format[sizeof(mi->format)-1]
-			== 0);
+	size_t len = strnlen(format, sizeof(mi->format));
+	assert (len < sizeof(mi->format));
+	memcpy (mi->format, format, len + 1);
 }
-
 void menu_item_set_queue_pos (struct menu_item *mi, const int pos)
 {
 	assert (mi != NULL);

@@ -2521,13 +2521,10 @@ static void bar_update_title (struct bar *b)
 		sprintf (b->title, "%*s", b->width - 7, b->orig_title);
 		strcpy (pct, " 100%  ");
 
-		/* The snprintf(3) below can never output 310 bytes! */
-		SUPPRESS_FORMAT_TRUNCATION_WARNING
 		if (b->filled < 99.99)
 			snprintf (pct, sizeof (pct), "  %02.0f%%  ", b->filled);
-		UNSUPPRESS_FORMAT_TRUNCATION_WARNING
 
-		strncpy (&b->title[b->width - 7], pct, strlen (pct));
+		strcpy (&b->title[b->width - 7], pct);
 	}
 }
 

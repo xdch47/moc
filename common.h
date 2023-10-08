@@ -159,6 +159,7 @@ int get_realtime (struct timespec *ts);
 void sec_to_min (char *buff, const int seconds);
 const char *get_home ();
 void common_cleanup ();
+char *pathstrcpy(char *restrict dst, const char *restrict src);
 
 #ifdef __cplusplus
 }

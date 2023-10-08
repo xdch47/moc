@@ -266,14 +266,9 @@ static char *find_theme_file (const char *name)
 	int rc;
 	static char path[PATH_MAX];
 
-	path[sizeof(path)-1] = 0;
 	if (name[0] == '/') {
-
 		/* Absolute path */
-		strncpy (path, name, sizeof(path));
-		if (path[sizeof(path)-1])
-			interface_fatal ("Theme path too long!");
-		return path;
+		return pathstrcpy(path, name);
 	}
 
 	/* Try the user directory */
@@ -292,10 +287,11 @@ static char *find_theme_file (const char *name)
 		return path;
 
 	/* File related to the current directory? */
-	strncpy (path, name, sizeof(path));
-	if (path[sizeof(path)-1])
-		interface_fatal ("Theme path too long!");
-	return path;
+	if (file_exists(name))
+		return pathstrcpy(path, name);
+
+	printf ("Error loading theme '%s'!", name);
+	return NULL;
 }
 
 /* Parse a theme element line. strtok() should be already invoked and consumed
@@ -521,19 +517,17 @@ void theme_init (bool has_xterm)
 	reset_colors_table ();
 
 	if (has_colors ()) {
-		char *file;
+		char *theme, *file;
 
-		if ((file = options_get_str ("ForceTheme"))) {
+		theme = options_get_str ("ForceTheme");
+		if (!theme && has_xterm)
+			theme = options_get_str ("XTermTheme");
+		if (!theme)
+			theme = options_get_str ("Theme");
+
+		if (theme && (file = find_theme_file(theme))) {
 			load_color_theme (file, 1);
-			strncpy (current_theme, find_theme_file (file), PATH_MAX);
-		}
-		else if (has_xterm && (file = options_get_str ("XTermTheme"))) {
-			load_color_theme (file, 1);
-			strncpy (current_theme, find_theme_file (file), PATH_MAX);
-		}
-		else if ((file = options_get_str ("Theme"))) {
-			load_color_theme (file, 1);
-			strncpy (current_theme, find_theme_file (file), PATH_MAX);
+			pathstrcpy(current_theme, file);
 		}
 		else
 			snprintf (current_theme, PATH_MAX, "%s/example_theme",
@@ -558,8 +552,9 @@ void themes_switch_theme (const char *file)
 			interface_error ("Error loading theme!");
 			reset_colors_table ();
 		}
-		else
-			strncpy (current_theme, file, PATH_MAX);
+		else {
+			pathstrcpy (current_theme, file);
+		}
 
 		set_default_colors ();
 	}

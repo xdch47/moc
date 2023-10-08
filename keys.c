@@ -9,6 +9,7 @@
  *
  */
 
+#include <linux/limits.h>
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -907,19 +908,10 @@ static char *find_keymap_file ()
 
 	if ((file = options_get_str("Keymap"))) {
 		if (file[0] == '/') {
-
 			/* Absolute path */
-			strncpy (path, file, sizeof(path));
-			if (path[sizeof(path)-1])
-				fatal ("Keymap path too long!");
-			return path;
+			return pathstrcpy(path, file);
 		}
-
-		strncpy (path, create_file_name(file), sizeof(path));
-		if (path[sizeof(path)-1])
-			fatal ("Keymap path too long!");
-
-		return path;
+		return pathstrcpy (path, create_file_name(file));
 	}
 
 	return NULL;
@@ -1206,11 +1198,7 @@ static void make_help ()
 		if (commands[i].keys[0] == -1)
 			len += strlen (unassigned);
 		help[i] = xcalloc (sizeof(char), len);
-		strncpy (help[i], get_command_keys(i), HELP_INDENT);
-		if (strlen(help[i]) < HELP_INDENT)
-			memset (help[i] + strlen(help[i]), ' ',
-					HELP_INDENT - strlen(help[i]));
-		strcpy (help[i] + HELP_INDENT, commands[i].help);
+		sprintf(help[i], "%-*s%s", HELP_INDENT, get_command_keys(i), commands[i].help);
 		if (commands[i].keys[0] == -1)
 			strcat (help[i], unassigned);
 	}

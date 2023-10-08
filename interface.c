@@ -9,6 +9,7 @@
  *
  */
 
+#include <linux/limits.h>
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -514,9 +515,10 @@ static void set_start_dir ()
 	if (!getcwd(cwd, sizeof (cwd))) {
 		if (errno == ERANGE)
 			fatal ("CWD is larger than PATH_MAX!");
-		strncpy (cwd, get_home (), sizeof (cwd));
-		if (cwd[sizeof (cwd) - 1])
+		const char *home = get_home();
+		if (strlen(home) >= sizeof(cwd))
 			fatal ("Home directory path is longer than PATH_MAX!");
+		strcpy (cwd, home);
 	}
 }
 
@@ -2104,9 +2106,9 @@ static char *make_dir (const char *str)
 	char *dir;
 	int add_slash = 0;
 
-	dir = (char *)xmalloc (sizeof(char) * (PATH_MAX + 1));
+	dir = (char *)xmalloc (sizeof(char) * (PATH_MAX));
 
-	dir[PATH_MAX] = 0;
+	dir[0] = 0;
 
 	/* If the string ends with a slash and is not just '/', add this
 	 * slash. */
@@ -2114,12 +2116,13 @@ static char *make_dir (const char *str)
 		add_slash = 1;
 
 	if (str[0] == '~') {
-		strncpy (dir, get_home (), PATH_MAX);
 
-		if (dir[PATH_MAX]) {
+		const char *home = get_home();
+		if (strnlen(home, PATH_MAX) == PATH_MAX) {
 			logit ("Path too long!");
 			return NULL;
 		}
+		strcpy (dir, home);
 
 		if (!strcmp(str, "~"))
 			add_slash = 1;
@@ -2144,24 +2147,25 @@ static void entry_key_go_dir (const struct iface_key *k)
 	if (k->type == IFACE_KEY_CHAR && k->key.ucs == '\t') {
 		char *dir;
 		char *complete_dir;
-		char buf[PATH_MAX+1];
+		char buf[PATH_MAX];
 		char *entry_text;
 
 		entry_text = iface_entry_get_text ();
-		if (!(dir = make_dir(entry_text))) {
-			free (entry_text);
-			return;
-		}
+		dir = make_dir(entry_text);
 		free (entry_text);
+		if (!dir)
+			return;
 
 		complete_dir = find_match_dir (dir);
+		if (complete_dir) {
+			free(dir);
+			dir = complete_dir;
+		}
 
-		strncpy (buf, complete_dir ? complete_dir : dir, sizeof(buf));
-		if (complete_dir)
-			free (complete_dir);
+		pathstrcpy(buf, dir);
+		free(dir);
 
 		iface_entry_set_text (buf);
-		free (dir);
 	}
 	else if (k->type == IFACE_KEY_CHAR && k->key.ucs == '\n') {
 		char *entry_text = iface_entry_get_text ();
@@ -2227,7 +2231,7 @@ static char *strip_white_spaces (const char *str)
 
 	if (n > 0) {
 		clean = (char *)xmalloc ((n + 1) * sizeof(char));
-		strncpy (clean, str, n);
+		memcpy (clean, str, n - 1);
 		clean[n] = 0;
 	}
 	else
