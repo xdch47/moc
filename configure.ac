@@ -427,7 +427,7 @@ AC_DEFINE_UNQUOTED([CONFIGURATION], ["$ac_configure_args"],
 
 dnl Capture SVN revision number for this build.
 AC_PATH_PROG(SVNVERSION, [svnversion])
-if test -n "$SVNVERSION"
+if test -n "$SVNVERSION" && test -d $srcdir/.svn
 then
 	SVNREVN=`$SVNVERSION -n $srcdir`
 	SVNREVN=`expr "$SVNREVN" : '\([[^:]]*\)'`
