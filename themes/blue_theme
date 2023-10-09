@@ -1,0 +1,46 @@
+
+background           = default default
+frame                = blue    default
+window_title         = default default
+title                = blue    default bold
+
+entry_title          = default default bold
+entry                = default default
+
+message              = default default bold
+error                = red     default bold
+
+directory            = blue    default bold,dim
+playlist             = cyan    default
+file                 = default default
+info                 = red     default dim
+
+selected_directory   = blue    white   bold,dim
+selected_playlist    = blue    white   bold,dim
+selected_file        = blue    white   bold,dim
+selected_info        = blue    white   bold,dim
+marked_selected_file = blue    white   bold,dim
+marked_selected_info = blue    white   bold,dim
+
+marked_file          = blue    default bold,dim
+marked_info          = blue    default bold,dim
+
+state                = blue    default bold
+status               = blue    default bold
+
+current_time         = blue    default bold,dim
+time_left            = blue    default bold,dim
+time_total_frames    = blue    default dim
+total_time           = blue    default bold,dim
+
+sound_parameters     = blue    default bold,dim
+legend               = blue    default dim
+
+enabled              = blue    default bold,dim
+disabled             = white   default dim
+
+empty_mixer_bar      = black   default bold
+empty_time_bar       = black   default bold
+filled_mixer_bar     = blue    white   bold,dim,reverse
+filled_time_bar      = blue    white   bold,dim,reverse
+plist_time           = blue    white   bold,dim,reverse
