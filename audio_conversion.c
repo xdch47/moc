@@ -46,9 +46,9 @@ static void float_to_u8 (const float *in, unsigned char *out,
 	assert (out != NULL);
 
 	for (i = 0; i < samples; i++) {
-		float f = in[i] * INT32_MAX;
+		float f = in[i] * (float)INT32_MAX;
 
-		if (f >= INT32_MAX)
+		if (f >= (float)INT32_MAX)
 			out[i] = UINT8_MAX;
 		else if (f <= INT32_MIN)
 			out[i] = 0;
@@ -65,9 +65,9 @@ static void float_to_s8 (const float *in, char *out, const size_t samples)
 	assert (out != NULL);
 
 	for (i = 0; i < samples; i++) {
-		float f = in[i] * INT32_MAX;
+		float f = in[i] * (float)INT32_MAX;
 
-		if (f >= INT32_MAX)
+		if (f >= (float)INT32_MAX)
 			out[i] = INT8_MAX;
 		else if (f <= INT32_MIN)
 			out[i] = INT8_MIN;
@@ -86,9 +86,9 @@ static void float_to_u16 (const float *in, unsigned char *out,
 
 	for (i = 0; i < samples; i++) {
 		uint16_t *out_val = (uint16_t *)(out + i * sizeof (uint16_t));
-		float f = in[i] * INT32_MAX;
+		float f = in[i] * (float)INT32_MAX;
 
-		if (f >= INT32_MAX)
+		if (f >= (float)INT32_MAX)
 			*out_val = UINT16_MAX;
 		else if (f <= INT32_MIN)
 			*out_val = 0;
@@ -106,9 +106,9 @@ static void float_to_s16 (const float *in, char *out, const size_t samples)
 
 	for (i = 0; i < samples; i++) {
 		int16_t *out_val = (int16_t *)(out + i * sizeof (int16_t));
-		float f = in[i] * INT32_MAX;
+		float f = in[i] * (float)INT32_MAX;
 
-		if (f >= INT32_MAX)
+		if (f >= (float)INT32_MAX)
 			*out_val = INT16_MAX;
 		else if (f <= INT32_MIN)
 			*out_val = INT16_MIN;

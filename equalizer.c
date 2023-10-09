@@ -880,7 +880,7 @@ static void equ_process_buffer_u32(uint32_t *buf, size_t samples)
   for(i=0; i<samples; i++)
   {
     tmp[i] = r_mixin_rate * tmp[i] + mixin_rate * buf[i];
-    tmp[i] = CLAMP(0, tmp[i], UINT32_MAX);
+    tmp[i] = CLAMP(0, tmp[i], (float)UINT32_MAX);
     buf[i] = (uint32_t)tmp[i];
   }
 
@@ -904,7 +904,7 @@ static void equ_process_buffer_s32(int32_t *buf, size_t samples)
   for(i=0; i<samples; i++)
   {
     tmp[i] = r_mixin_rate * tmp[i] + mixin_rate * buf[i];
-    tmp[i] = CLAMP(INT32_MIN, tmp[i], INT32_MAX);
+    tmp[i] = CLAMP((float)INT32_MIN, tmp[i], (float)INT32_MAX);
     buf[i] = (int32_t)tmp[i];
   }
 
