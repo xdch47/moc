@@ -575,10 +575,10 @@ void options_init ()
 
 #ifdef OPENBSD
 	add_list ("SoundDriver", "SNDIO:JACK:OSS",
-	          CHECK_DISCRETE(5), "SNDIO", "Jack", "ALSA", "OSS", "null");
+	          CHECK_DISCRETE(5), "SNDIO", "PulseAudio", "Jack", "ALSA", "OSS", "null");
 #else
-	add_list ("SoundDriver", "Jack:ALSA:OSS",
-	          CHECK_DISCRETE(5), "SNDIO", "Jack", "ALSA", "OSS", "null");
+	add_list ("SoundDriver", "PulseAudio:Jack:ALSA:OSS",
+	          CHECK_DISCRETE(5), "SNDIO", "PulseAudio", "Jack", "ALSA", "OSS", "null");
 #endif
 
 	add_str  ("JackClientName", "moc", CHECK_NONE);

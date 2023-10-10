@@ -136,6 +136,20 @@ then
 	                             [#include <db.h>]])
 fi
 
+AC_ARG_WITH(pulse, AS_HELP_STRING(--without-pulse,
+			Compile without PulseAudio support.))
+
+if test "x$with_pulse" != "xno"
+then
+	PKG_CHECK_MODULES(PULSE, [libpulse],
+	                  [SOUND_DRIVERS="$SOUND_DRIVERS PULSE"
+	                    EXTRA_OBJS="$EXTRA_OBJS pulse.o"
+	                    AC_DEFINE([HAVE_PULSE], 1, [Define if you have PulseAudio.])
+	                    EXTRA_LIBS="$EXTRA_LIBS $PULSE_LIBS"
+	                    CFLAGS="$CFLAGS $PULSE_CFLAGS"],
+  	                    [true])
+fi
+
 AC_ARG_WITH(oss, AS_HELP_STRING([--without-oss],
                                 [Compile without OSS support]))
 

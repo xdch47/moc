@@ -32,6 +32,9 @@
 #include "log.h"
 #include "lists.h"
 
+#ifdef HAVE_PULSE
+# include "pulse.h"
+#endif
 #ifdef HAVE_OSS
 # include "oss.h"
 #endif
@@ -881,6 +884,15 @@ static void find_working_driver (lists_t_strs *drivers, struct hw_funcs *funcs)
 		if (!strcasecmp(name, "sndio")) {
 			sndio_funcs (funcs);
 			printf ("Trying SNDIO...\n");
+			if (funcs->init(&hw_caps))
+				return;
+		}
+#endif
+
+#ifdef HAVE_PULSE
+		if (!strcasecmp(name, "pulseaudio")) {
+			pulse_funcs (funcs);
+			printf ("Trying PulseAudio...\n");
 			if (funcs->init(&hw_caps))
 				return;
 		}
