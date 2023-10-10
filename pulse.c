@@ -80,6 +80,7 @@
 
 #define DEBUG
 
+#include <math.h>
 #include <pulse/pulseaudio.h>
 #include "common.h"
 #include "log.h"
@@ -427,7 +428,7 @@ static void volume_cb (const pa_cvolume *v, void *userdata)
 	int *result = userdata;
 
 	if (v)
-		*result = 100 * pa_cvolume_avg (v) / PA_VOLUME_NORM;
+		*result = ceil(100.0 * pa_cvolume_avg (v) / PA_VOLUME_NORM);
 
 	pa_threaded_mainloop_signal (mainloop, 0);
 }
