@@ -4,7 +4,7 @@ AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([dist-xz no-dist-gzip])
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.69])
 
 AC_CANONICAL_HOST
 AC_PROG_CC
