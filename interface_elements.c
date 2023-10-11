@@ -55,6 +55,7 @@
 #endif
 #define HISTORY_SIZE	50
 
+static const int MIXER_BAR_RIGHT_SPACE = 17;
 
 /* TODO: removing/adding a char to the entry may increase width of the text
  * by more than one column. */
@@ -2747,7 +2748,7 @@ static void info_win_set_mixer_name (struct info_win *w, const char *name)
 
 	bar_set_title (&w->mixer_bar, name);
 	if (!w->in_entry && !w->too_small) {
-		bar_draw (&w->mixer_bar, w->win, COLS - 37, 0);
+		bar_draw (&w->mixer_bar, w->win, COLS - w->mixer_bar.width - MIXER_BAR_RIGHT_SPACE, 0);
 		info_win_update_curs (w);
 	}
 }
@@ -3062,7 +3063,7 @@ static void info_win_set_mixer_value (struct info_win *w, const int value)
 
 	bar_set_fill (&w->mixer_bar, (double) value);
 	if (!w->in_entry && !w->too_small)
-		bar_draw (&w->mixer_bar, w->win, COLS - 37, 0);
+		bar_draw (&w->mixer_bar, w->win, COLS - w->mixer_bar.width - MIXER_BAR_RIGHT_SPACE, 0);
 }
 
 /* Draw a switch that is turned on or off in form of [TITLE]. */
@@ -3375,8 +3376,8 @@ static void info_win_draw_static_elements (const struct info_win *w)
 				lines.ltee, lines.rtee, lines.llcorn, lines.lrcorn);
 
 		/* mixer frame */
-		mvwaddch (w->win, 0, COLS - 38, lines.rtee);
-		mvwaddch (w->win, 0, COLS - 17, lines.ltee);
+		mvwaddch (w->win, 0, COLS - 1 - w->mixer_bar.width - MIXER_BAR_RIGHT_SPACE, lines.rtee);
+		mvwaddch (w->win, 0, COLS - MIXER_BAR_RIGHT_SPACE, lines.ltee);
 
 		/* playlist time frame */
 		mvwaddch (w->win, 0, COLS - 13, lines.rtee);
@@ -3425,7 +3426,7 @@ static void info_win_draw (const struct info_win *w)
 		if (w->in_entry)
 			entry_draw (&w->entry, w->win, 1, 0);
 		else
-			bar_draw (&w->mixer_bar, w->win, COLS - 37, 0);
+			bar_draw (&w->mixer_bar, w->win, COLS - w->mixer_bar.width - MIXER_BAR_RIGHT_SPACE, 0);
 
 		bar_draw (&w->time_bar, w->win, 2, 3);
 	}
@@ -3587,7 +3588,7 @@ static void info_win_resize (struct info_win *w)
 	mvwin (w->win, LINES - 4, 0);
 	werase (w->win);
 
-	bar_resize (&w->mixer_bar, 20);
+	bar_resize (&w->mixer_bar, w->mixer_bar.width);
 	bar_resize (&w->time_bar, COLS - 4);
 	info_win_set_block_title (w);
 
