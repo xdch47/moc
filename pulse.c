@@ -74,6 +74,7 @@
  * stream is valid.
  */
 
+#include <pulse/proplist.h>
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -92,11 +93,12 @@
  */
 static pa_threaded_mainloop *mainloop = NULL;
 static pa_context *context = NULL;
+static uint32_t pa_default_sink_index = 0;
 
 /* The stream is initialized in pulse_open and destroyed in pulse_close. */
 static pa_stream *stream = NULL;
 
-static int showing_sink_volume = 0;
+static int showing_sink_volume = 1;
 
 /* Callbacks that do nothing but wake up the mainloop. */
 
@@ -457,16 +459,17 @@ static int pulse_read_mixer (void)
 
 	pa_threaded_mainloop_lock (mainloop);
 
-	if (stream) {
-		if (showing_sink_volume)
-			op = pa_context_get_sink_info_by_index (
-				context, pa_stream_get_device_index (stream),
+	if (showing_sink_volume) {
+		op = pa_context_get_sink_info_by_index (
+				context, stream ? pa_stream_get_device_index (stream) : pa_default_sink_index,
 				sink_volume_cb, &result);
-		else
-			op = pa_context_get_sink_input_info (
+	} else if (stream) {
+		op = pa_context_get_sink_input_info (
 				context, pa_stream_get_index (stream),
 				sink_input_volume_cb, &result);
+	}
 
+	if (showing_sink_volume || stream) {
 		while (pa_operation_get_state (op) == PA_OPERATION_RUNNING)
 			pa_threaded_mainloop_wait (mainloop);
 
@@ -488,15 +491,14 @@ static void pulse_set_mixer (int vol)
 
 	pa_threaded_mainloop_lock (mainloop);
 
-	if (stream) {
-		if (showing_sink_volume)
-			op = pa_context_set_sink_volume_by_index (
-				context, pa_stream_get_device_index (stream),
-				&v, NULL, NULL);
-		else
-			op = pa_context_set_sink_input_volume (
-				context, pa_stream_get_index (stream),
-				&v, NULL, NULL);
+	if (showing_sink_volume) {
+		op = pa_context_set_sink_volume_by_index (
+			context, stream ? pa_stream_get_device_index (stream) : pa_default_sink_index,
+			&v, NULL, NULL);
+	} else if (stream) {
+		op = pa_context_set_sink_input_volume (
+			context, pa_stream_get_index (stream),
+			&v, NULL, NULL);
 
 		pa_operation_unref (op);
 	}
@@ -640,20 +642,7 @@ static void sink_name_cb (pa_context *c ATTR_UNUSED,
 	char **result = userdata;
 
 	if (i && !*result)
-		*result = xstrdup (i->name);
-
-	pa_threaded_mainloop_signal (mainloop, 0);
-}
-
-static void sink_input_name_cb (pa_context *c ATTR_UNUSED,
-				const pa_sink_input_info *i,
-				int eol ATTR_UNUSED,
-				void *userdata)
-{
-	char **result = userdata;
-
-	if (i && !*result)
-		*result = xstrdup (i->name);
+		*result = xstrdup(pa_proplist_gets(i->proplist, PA_PROP_DEVICE_DESCRIPTION));
 
 	pa_threaded_mainloop_signal (mainloop, 0);
 }
@@ -661,24 +650,23 @@ static void sink_input_name_cb (pa_context *c ATTR_UNUSED,
 static char *pulse_get_mixer_channel_name (void)
 {
 	char *result = NULL;
-	pa_operation *op;
 
 	pa_threaded_mainloop_lock (mainloop);
 
-	if (stream) {
-		if (showing_sink_volume)
-			op = pa_context_get_sink_info_by_index (
-				context, pa_stream_get_device_index (stream),
+	if (showing_sink_volume) {
+		pa_operation *op;
+		op = pa_context_get_sink_info_by_index (
+				context, stream ? pa_stream_get_device_index (stream) : pa_default_sink_index,
 				sink_name_cb, &result);
-		else
-			op = pa_context_get_sink_input_info (
-				context, pa_stream_get_index (stream),
-				sink_input_name_cb, &result);
 
 		while (pa_operation_get_state (op) == PA_OPERATION_RUNNING)
 			pa_threaded_mainloop_wait (mainloop);
 
 		pa_operation_unref (op);
+	} else {
+		//result = xstrdup(PACKAGE_NAME);
+		result = xstrdup("PulseStream");
+
 	}
 
 	pa_threaded_mainloop_unlock (mainloop);
