@@ -2511,22 +2511,35 @@ static void check_term_size (struct main_win *mw, struct info_win *iw)
 /* Update the title with the current fill. */
 static void bar_update_title (struct bar *b)
 {
-	char pct[8];
-
+	size_t maxsize, len, total_space, left_space, right_space;
+	int margin = 0;
 	assert (b != NULL);
 	assert (b->show_val);
+	assert (sizeof(b->title) > (size_t)b->width);
 
-	if (!b->show_pct)
-		sprintf (b->title, "%*s", b->width, b->orig_title);
-	else {
-		sprintf (b->title, "%*s", b->width - 7, b->orig_title);
-		strcpy (pct, " 100%  ");
+	maxsize = b->width;
 
-		if (b->filled < 99.99)
-			snprintf (pct, sizeof (pct), "  %02.0f%%  ", b->filled);
+	if (b->show_pct)
+		maxsize -= 5;
+	len = strnlen(b->orig_title, maxsize - 2 * margin);
 
-		strcpy (&b->title[b->width - 7], pct);
+	// center text
+	total_space = maxsize - 2 * margin - len;
+	left_space = total_space / 2 + margin;
+	right_space = left_space;
+
+	memset(b->title, ' ', left_space * sizeof(char));
+	memcpy(b->title + left_space, b->orig_title, len);
+	if (total_space % 2) {
+		// pad
+		b->title[left_space + len++] = ' ';
 	}
+
+	if (b->show_pct)
+		snprintf (b->title + left_space + len, 6, " %3.0f%%", b->filled);
+
+	memset(b->title + b->width - right_space, ' ',  right_space * sizeof(char));
+	b->title[b->width] = 0;
 }
 
 static void bar_set_title (struct bar *b, const char *title)
