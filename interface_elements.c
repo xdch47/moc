@@ -2722,7 +2722,7 @@ static void info_win_init (struct info_win *w)
 
 	set_startup_message (w);
 
-	bar_init (&w->mixer_bar, 20, "", 1, 1,
+	bar_init (&w->mixer_bar, options_get_int("MixerBarWidth"), "", 1, 1,
 	          get_color(CLR_MIXER_BAR_FILL),
 	          get_color(CLR_MIXER_BAR_EMPTY));
 	bar_init (&w->time_bar, COLS - 4, "", 1,
